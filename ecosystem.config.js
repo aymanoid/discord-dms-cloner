@@ -3,7 +3,6 @@ module.exports = {
     {
       name: "sow-handler-server",
       script: "./handler-server/index.mjs",
-      watch: true,
     },
     {
       name: "sow-discord-listener",
