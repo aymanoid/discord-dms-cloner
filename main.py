@@ -1,6 +1,5 @@
 import discord
 import config
-from telegram_handler import telegram_handler
 from discord_handler import discord_handler
 
 
@@ -15,9 +14,6 @@ class MyClient(discord.Client):
 
         if config.discord["enabled"]:
             await discord_handler(self, message)
-
-        if config.telegram["enabled"]:
-            telegram_handler(message)
 
 
 client = MyClient()
