@@ -72,13 +72,16 @@ const discordHandler = async (config, client, bodyData) => {
     );
   }
 
-  archiveWebhook.send({
-    content: bodyData.message_data.content,
+  const messageObj = {
     files,
     embeds: bodyData.message_data.embeds,
     username: bodyData.message_data.author.username,
     avatarURL: bodyData.message_data.author.avatar_url,
-  });
+  };
+  if (bodyData.message_data.content) {
+    messageObj.content = bodyData.message_data.content;
+  }
+  await archiveWebhook.send(messageObj);
   return bodyData;
 };
 
