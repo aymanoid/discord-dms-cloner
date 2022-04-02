@@ -18,6 +18,7 @@ const discordHandler = async (config, client, bodyData) => {
       e.topic.endsWith(`${bodyData.channel_data.id}_DMS`) &&
       e.parent === archiveCategory
   );
+
   if (!archiveChannel) {
     let archiveChannelName, archiveChannelTopic;
 
@@ -29,9 +30,9 @@ const discordHandler = async (config, client, bodyData) => {
       archiveChannelName = bodyData.channel_data.name;
       archiveChannelTopic = `${
         bodyData.channel_data.name
-      }\n- IDs: ${bodyData.channel_data.recipients
-        .map((e) => e.id)
-        .join(" , ")}\n- ${bodyData.channel_data.id}_DMS`;
+      }\n- IDs: ${bodyData.channel_data.recipients.join(", ")}\n- ${
+        bodyData.channel_data.id
+      }_DMS`;
     }
 
     if (archiveChannelName.length > 100) {
