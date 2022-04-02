@@ -1,14 +1,12 @@
+import "dotenv/config.js";
 import Fastify from "fastify";
-import { readFile } from "fs/promises";
 import { Client } from "discord.js";
 import discordHandler from "./discord-handler.mjs";
 
 const fastify = Fastify({
   logger: true,
 });
-const config = JSON.parse(
-  await readFile(new URL("../config.json", import.meta.url))
-);
+const config = JSON.parse(process.env.SOW_CONFIG);
 
 let client;
 if (config.discord.enabled) {
