@@ -57,31 +57,53 @@ const discordHandler = async (config, client, bodyData) => {
     );
   }
 
-  const files = bodyData.message_data.attachments.map((e) => ({
-    attachment: e.url,
-    name: e.filename,
-  }));
-  if (bodyData.message_data.sticker_items) {
-    const stickers = await Promise.all(
-      bodyData.message_data.sticker_items.map((e) => client.fetchSticker(e.id))
-    );
-    stickers.forEach((e) =>
-      files.push({
+  const messageObj = {};
+
+  switch (bodyData.message_data.type) {
+    case 0:
+      const files = bodyData.message_data.attachments.map((e) => ({
         attachment: e.url,
-        name: `${e.name}-${e.url.substring(e.url.lastIndexOf("/") + 1)}`,
-      })
-    );
+        name: e.filename,
+      }));
+      if (bodyData.message_data.sticker_items) {
+        const stickers = await Promise.all(
+          bodyData.message_data.sticker_items.map((e) =>
+            client.fetchSticker(e.id)
+          )
+        );
+        stickers.forEach((e) =>
+          files.push({
+            attachment: e.url,
+            name: `${e.name}-${e.url.substring(e.url.lastIndexOf("/") + 1)}`,
+          })
+        );
+      }
+
+      messageObj.username = bodyData.message_data.author.username;
+      messageObj.avatarURL = bodyData.message_data.author.avatar_url;
+      messageObj.files = files;
+      messageObj.embeds = bodyData.message_data.embeds;
+      if (bodyData.message_data.content) {
+        messageObj.content = bodyData.message_data.content;
+      }
+      break;
+    case 1:
+      const adderUser = bodyData.message_data.author;
+      const addedUser = bodyData.message_data.mentions[0];
+
+      messageObj.username = "System";
+      messageObj.content = `\`${adderUser.username}#${adderUser.discriminator}\` added \`${addedUser.username}#${addedUser.discriminator}\` to the group.`;
+      break;
+    case 2:
+      const leftUser = bodyData.message_data.author;
+
+      messageObj.username = "System";
+      messageObj.content = `\`${leftUser.username}#${leftUser.discriminator}\` left the group.`;
+      break;
+    default:
+      messageObj.content = `\`[${bodyData.message_data.type}] message type is not supported\``;
   }
 
-  const messageObj = {
-    files,
-    embeds: bodyData.message_data.embeds,
-    username: bodyData.message_data.author.username,
-    avatarURL: bodyData.message_data.author.avatar_url,
-  };
-  if (bodyData.message_data.content) {
-    messageObj.content = bodyData.message_data.content;
-  }
   await archiveWebhook.send(messageObj);
   return bodyData;
 };
