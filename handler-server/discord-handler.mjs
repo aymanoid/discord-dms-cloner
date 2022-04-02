@@ -92,13 +92,13 @@ const discordHandler = async (config, client, bodyData) => {
       const addedUser = bodyData.message_data.mentions[0];
 
       messageObj.username = "System";
-      messageObj.content = `\`${adderUser.username}#${adderUser.discriminator}\` added \`${addedUser.username}#${addedUser.discriminator}\` to the group.`;
+      messageObj.content = `\`${adderUser.username}#${adderUser.discriminator}@${adderUser.id}\` added \`${addedUser.username}#${addedUser.discriminator}@${addedUser.id}\` to the group.`;
       break;
     case 2:
       const leftUser = bodyData.message_data.author;
 
       messageObj.username = "System";
-      messageObj.content = `\`${leftUser.username}#${leftUser.discriminator}\` left the group.`;
+      messageObj.content = `\`${leftUser.username}#${leftUser.discriminator}@${leftUser.id}\` left the group.`;
       break;
     default:
       messageObj.content = `\`[${bodyData.message_data.type}] message type is not supported\``;
