@@ -100,6 +100,14 @@ const discordHandler = async (config, client, bodyData) => {
       messageObj.username = "System";
       messageObj.content = `\`${leftUser.username}#${leftUser.discriminator}@${leftUser.id}\` left the group.`;
       break;
+    case 3:
+      console.log(bodyData.message_data.call);
+      const callerUser = bodyData.message_data.author;
+      const callRecipients = bodyData.message_data.call.participants.join(", ");
+
+      messageObj.username = "System";
+      messageObj.content = `\`${callerUser.username}#${callerUser.discriminator}@${callerUser.id}\` started a call with \`${callRecipients}\`.`;
+      break;
     default:
       messageObj.content = `\`[${bodyData.message_data.type}] message type is not supported\``;
   }

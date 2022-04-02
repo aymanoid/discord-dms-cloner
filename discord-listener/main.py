@@ -1,3 +1,4 @@
+from http import client
 import json
 from os import environ
 from dotenv import load_dotenv
@@ -47,6 +48,19 @@ class MyClient(discord.Client):
         data_payload["message_data"]["author"]["avatar_url"] = str(
             message.author.avatar_url_as(static_format="png", size=4096)
         )
+
+        if message.type == discord.MessageType.call:
+            for i, e in enumerate(data_payload["message_data"]["call"]["participants"]):
+                participant = self.get_user(int(e))
+                if participant is None:
+                    try:
+                        participant = await self.fetch_user(e)
+                    except:
+                        participant = None
+                if participant is not None:
+                    data_payload["message_data"]["call"]["participants"][
+                        i
+                    ] = f"{participant.name}#{participant.discriminator}@{participant.id}"
 
         requests.post("http://127.0.0.1:6969/handle-send", json=data_payload)
 
