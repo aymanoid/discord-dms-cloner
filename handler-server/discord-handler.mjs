@@ -106,7 +106,7 @@ const discordHandler = async (config, client, bodyData) => {
       const callRecipients = bodyData.message_data.call.participants.join(", ");
 
       messageObj.username = "System";
-      messageObj.content = `\`${callerUser.username}#${callerUser.discriminator}@${callerUser.id}\` started a call with \`${callRecipients}\`.`;
+      messageObj.content = `\`${callerUser.username}#${callerUser.discriminator}@${callerUser.id}\` started a call with \`${callRecipients}\`. | \`mid:${bodyData.message_data.id}\``;
       break;
     default:
       messageObj.content = `\`[${bodyData.message_data.type}] message type is not supported\``;
