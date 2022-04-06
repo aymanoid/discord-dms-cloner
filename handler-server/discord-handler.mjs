@@ -1,3 +1,10 @@
+import { MessageEmbed } from "discord.js";
+import formatDuration from "format-duration";
+
+const getUserString = (user) => {
+  return `${user.username}#${user.discriminator}@${user.id}`;
+};
+
 const discordHandler = async (config, client, bodyData) => {
   const archiveGuild = await client.guilds.fetch(config.discord.archive_guild);
   const guildChannels = await archiveGuild.channels.fetch();
@@ -88,25 +95,133 @@ const discordHandler = async (config, client, bodyData) => {
       }
       break;
     case 1:
-      const adderUser = bodyData.message_data.author;
-      const addedUser = bodyData.message_data.mentions[0];
-
       messageObj.username = "System";
-      messageObj.content = `\`${adderUser.username}#${adderUser.discriminator}@${adderUser.id}\` added \`${addedUser.username}#${addedUser.discriminator}@${addedUser.id}\` to the group.`;
+      messageObj.embeds = [
+        new MessageEmbed({
+          title: "Group Member Added",
+          timestamp: bodyData.message_data.timestamp,
+          fields: [
+            {
+              name: "Executor",
+              value: getUserString(bodyData.message_data.author),
+              inline: true,
+            },
+            {
+              name: "User Added",
+              value: getUserString(bodyData.message_data.mentions[0]),
+              inline: true,
+            },
+          ],
+          footer: { text: `Message ID: ${bodyData.message_data.id}` },
+        }),
+      ];
       break;
     case 2:
-      const leftUser = bodyData.message_data.author;
-
       messageObj.username = "System";
-      messageObj.content = `\`${leftUser.username}#${leftUser.discriminator}@${leftUser.id}\` left the group.`;
+      messageObj.embeds = [
+        new MessageEmbed({
+          title: "Group Member Left",
+          timestamp: bodyData.message_data.timestamp,
+          fields: [
+            {
+              name: "User Left",
+              value: getUserString(bodyData.message_data.author),
+              inline: true,
+            },
+          ],
+          footer: { text: `Message ID: ${bodyData.message_data.id}` },
+        }),
+      ];
       break;
     case 3:
-      console.log(bodyData.message_data.call);
-      const callerUser = bodyData.message_data.author;
-      const callRecipients = bodyData.message_data.call.participants.join(", ");
+      if (bodyData.kind === "send") {
+        messageObj.username = "System";
+        messageObj.embeds = [
+          new MessageEmbed({
+            title: "Call Started",
+            timestamp: bodyData.message_data.timestamp,
+            fields: [
+              {
+                name: "Starter",
+                value: getUserString(bodyData.message_data.author),
+                inline: true,
+              },
+              {
+                name: "Participants",
+                value: bodyData.message_data.call.participants.join("\n"),
+                inline: false,
+              },
+            ],
+            footer: { text: `Message ID: ${bodyData.message_data.id}` },
+          }),
+        ];
+      }
+      if (bodyData.kind === "edit") {
+        const endedTimestamp = bodyData.message_data.call.ended_timestamp;
 
-      messageObj.username = "System";
-      messageObj.content = `\`${callerUser.username}#${callerUser.discriminator}@${callerUser.id}\` started a call with \`${callRecipients}\`. | \`mid:${bodyData.message_data.id}\``;
+        if (endedTimestamp) {
+          const endedDate = new Date(endedTimestamp).toLocaleString("en-GB");
+          const callDuration = formatDuration(
+            Math.abs(
+              new Date(bodyData.message_data.timestamp) -
+                new Date(endedTimestamp)
+            )
+          );
+
+          console.log(callDuration);
+          messageObj.username = "System";
+          messageObj.embeds = [
+            new MessageEmbed({
+              title: "Call Ended",
+              timestamp: bodyData.message_data.timestamp,
+              fields: [
+                {
+                  name: "Starter",
+                  value: getUserString(bodyData.message_data.author),
+                  inline: true,
+                },
+                {
+                  name: "Ended At",
+                  value: endedDate,
+                  inline: true,
+                },
+                {
+                  name: "Lasted For",
+                  value: callDuration,
+                  inline: true,
+                },
+                {
+                  name: "Participants",
+                  value: bodyData.message_data.call.participants.join("\n"),
+                  inline: false,
+                },
+              ],
+              footer: { text: `Message ID: ${bodyData.message_data.id}` },
+            }),
+          ];
+        } else {
+          messageObj.username = "System";
+          messageObj.embeds = [
+            new MessageEmbed({
+              title: "Call Updated",
+              timestamp: bodyData.message_data.timestamp,
+              fields: [
+                {
+                  name: "Starter",
+                  value: getUserString(bodyData.message_data.author),
+                  inline: true,
+                },
+                {
+                  name: "Participants",
+                  value: bodyData.message_data.call.participants.join("\n"),
+                  inline: false,
+                },
+              ],
+              footer: { text: `Message ID: ${bodyData.message_data.id}` },
+            }),
+          ];
+        }
+      }
       break;
     default:
       messageObj.content = `\`[${bodyData.message_data.type}] message type is not supported\``;

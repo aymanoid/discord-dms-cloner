@@ -11,6 +11,57 @@ load_dotenv()
 config = json.loads(environ.get("SOW_CONFIG"))
 
 
+def avatar_url(avatar, user_id, discriminator):
+    if avatar is None:
+        index = int(discriminator) % 5
+        return f"https://cdn.discordapp.com/embed/avatars/{index}.png"
+    animated = avatar.startswith("a_")
+    format = "gif" if animated else "png"
+    return f"https://cdn.discordapp.com/avatars/{user_id}/{avatar}.{format}?size=4096"
+
+
+async def generate_payload(client, message_id, channel, kind):
+    raw_message = await client.http.get_message(
+        message_id=message_id, channel_id=channel.id
+    )
+    data_payload = {
+        "kind": kind,
+        "target_data": {"id": str(client.user.id), "tag": str(client.user)},
+        "channel_data": {
+            "id": str(channel.id),
+            "name": str(channel),
+            "type": str(channel.type),
+        },
+        "message_data": raw_message,
+    }
+    if data_payload["channel_data"]["type"] == "private":
+        data_payload["channel_data"]["recipient"] = {
+            "id": channel.recipient.id,
+            "name": channel.recipient.name,
+        }
+    if data_payload["channel_data"]["type"] == "group":
+        data_payload["channel_data"]["recipients"] = [
+            str(x.id) for x in channel.recipients
+        ]
+    data_payload["message_data"]["author"]["avatar_url"] = avatar_url(
+        raw_message["author"]["avatar"],
+        raw_message["author"]["id"],
+        raw_message["author"]["discriminator"],
+    )
+
+    if raw_message["type"] == 3:
+        for i, e in enumerate(raw_message["call"]["participants"]):
+            try:
+                participant = client.get_user(int(e)) or await client.fetch_user(e)
+                data_payload["message_data"]["call"]["participants"][
+                    i
+                ] = f"{participant.name}#{participant.discriminator}@{participant.id}"
+            except:
+                pass
+
+    return data_payload
+
+
 class MyClient(discord.Client):
     async def on_connect(self):
         print("Connected as", self.user)
@@ -24,43 +75,21 @@ class MyClient(discord.Client):
         if str(message.channel.type) not in ("private", "group"):
             return
 
-        raw_message = await self.http.get_message(
-            message_id=message.id, channel_id=message.channel.id
-        )
-        data_payload = {
-            "target_data": {"id": str(self.user.id), "tag": str(self.user)},
-            "channel_data": {
-                "id": str(message.channel.id),
-                "name": str(message.channel),
-                "type": str(message.channel.type),
-            },
-            "message_data": raw_message,
-        }
-        if data_payload["channel_data"]["type"] == "private":
-            data_payload["channel_data"]["recipient"] = {
-                "id": message.channel.recipient.id,
-                "name": message.channel.recipient.name,
-            }
-        if data_payload["channel_data"]["type"] == "group":
-            data_payload["channel_data"]["recipients"] = [
-                str(x.id) for x in message.channel.recipients
-            ]
-        data_payload["message_data"]["author"]["avatar_url"] = str(
-            message.author.avatar_url_as(static_format="png", size=4096)
-        )
+        data_payload = await generate_payload(self, message.id, message.channel, "send")
 
-        if message.type == discord.MessageType.call:
-            for i, e in enumerate(data_payload["message_data"]["call"]["participants"]):
-                participant = self.get_user(int(e))
-                if participant is None:
-                    try:
-                        participant = await self.fetch_user(e)
-                    except:
-                        participant = None
-                if participant is not None:
-                    data_payload["message_data"]["call"]["participants"][
-                        i
-                    ] = f"{participant.name}#{participant.discriminator}@{participant.id}"
+        requests.post("http://127.0.0.1:6969/handle-send", json=data_payload)
+
+    async def on_raw_message_edit(self, payload):
+        target_channel = self.get_channel(
+            payload.channel_id
+        ) or await self.fetch_channel(int(payload.channel_id))
+
+        if str(target_channel.type) not in ("private", "group"):
+            return
+
+        data_payload = await generate_payload(
+            self, payload.message_id, target_channel, "edit"
+        )
 
         requests.post("http://127.0.0.1:6969/handle-send", json=data_payload)
 

@@ -12,6 +12,7 @@
   "dependencies": {
     "discord.js": "^13.6.0",
     "dotenv": "^16.0.0",
-    "fastify": "^3.27.4"
+    "fastify": "^3.27.4",
+    "format-duration": "^2.0.0"
   }
 }
