@@ -168,7 +168,6 @@ const discordHandler = async (config, client, bodyData) => {
             )
           );
 
-          console.log(callDuration);
           messageObj.username = "System";
           messageObj.embeds = [
             new MessageEmbed({
