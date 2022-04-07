@@ -25,17 +25,38 @@ const handleMessageSend = async (
         );
       }
 
-      const messageObj = {
+      const mirrorMsgObj = {
         username: messageData.author.username,
         avatarURL: messageData.author.avatar_url,
         files,
         embeds: messageData.embeds,
       };
+
+      const logsMsgObj = {
+        username: "System",
+        files,
+        embeds: [
+          new MessageEmbed({
+            author: {
+              name: getUserString(messageData.author),
+              iconURL: messageData.author.avatar_url,
+            },
+            timestamp: messageData.timestamp,
+            footer: { text: `Message ID: ${messageData.id}` },
+          }),
+          ...messageData.embeds.slice(0, 9),
+        ],
+      };
+
       if (messageData.content) {
-        messageObj.content = messageData.content;
+        mirrorMsgObj.content = messageData.content;
+        logsMsgObj.embeds[0].description = messageData.content;
       }
 
-      await mirrorWebhook.send(messageObj);
+      await Promise.all([
+        mirrorWebhook.send(mirrorMsgObj),
+        logsWebhook.send(logsMsgObj),
+      ]);
       break;
     }
     case 3: {
