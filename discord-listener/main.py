@@ -75,7 +75,9 @@ class MyClient(discord.Client):
         if str(message.channel.type) not in ("private", "group"):
             return
 
-        data_payload = await generate_payload(self, message.id, message.channel, "send")
+        data_payload = await generate_payload(
+            self, message.id, message.channel, "MESSAGE_SEND"
+        )
 
         requests.post("http://127.0.0.1:6969/handle-send", json=data_payload)
 
@@ -88,7 +90,7 @@ class MyClient(discord.Client):
             return
 
         data_payload = await generate_payload(
-            self, payload.message_id, target_channel, "edit"
+            self, payload.message_id, target_channel, "MESSAGE_EDIT"
         )
 
         requests.post("http://127.0.0.1:6969/handle-send", json=data_payload)

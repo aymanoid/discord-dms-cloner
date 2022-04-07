@@ -1,7 +1,7 @@
 import "dotenv/config.js";
 import Fastify from "fastify";
 import { Client } from "discord.js";
-import discordHandler from "./discord-handler.mjs";
+import discordHandler from "./discord-handler/index.mjs";
 
 const fastify = Fastify({
   logger: true,
