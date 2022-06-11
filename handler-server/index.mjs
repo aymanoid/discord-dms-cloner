@@ -27,7 +27,7 @@ fastify.post("/handle-send", async (request, reply) => {
   reply.send({ done: "yes" });
 });
 
-fastify.listen(6969, function (err, address) {
+fastify.listen(6969, "0.0.0.0", function (err, address) {
   if (err) {
     fastify.log.error(err);
     process.exit(1);

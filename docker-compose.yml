@@ -1,0 +1,35 @@
+version: "3"
+services:
+  discord-listener:
+    container_name: discord-listener
+    build: ./discord-listener
+    image: discord-listener:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SOW_CONFIG: ${SOW_CONFIG}
+      HANDLER_HOST: handler-server
+    links:
+      - handler-server:handler-server
+    networks:
+      - sow-net
+    depends_on:
+      - handler-server
+
+  handler-server:
+    container_name: handler-server
+    build: ./handler-server
+    image: handler-server:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SOW_CONFIG: ${SOW_CONFIG}
+    ports:
+      - "6969:6969"
+    networks:
+      - sow-net
+
+networks:
+  sow-net:
+    name: SowNet
+    driver: bridge

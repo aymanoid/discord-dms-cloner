@@ -9,6 +9,7 @@ from collections import namedtuple
 
 load_dotenv()
 config = json.loads(environ.get("SOW_CONFIG"))
+handler_host = environ.get("HANDLER_HOST") or "127.0.0.1"
 
 
 class MyClient(discord.Client):
@@ -26,7 +27,7 @@ class MyClient(discord.Client):
 
         data_payload = await message_send_payload(self, message.id, message.channel)
 
-        requests.post("http://127.0.0.1:6969/handle-send", json=data_payload)
+        requests.post(f"http://{handler_host}:6969/handle-send", json=data_payload)
 
     async def on_raw_message_edit(self, payload):
         target_channel = self.get_channel(
@@ -42,7 +43,7 @@ class MyClient(discord.Client):
             target_channel,
         )
 
-        requests.post("http://127.0.0.1:6969/handle-send", json=data_payload)
+        requests.post(f"http://{handler_host}:6969/handle-send", json=data_payload)
 
 
 # First, we must attach an event signalling when the bot has been
